@@ -2,7 +2,7 @@
 /*
   Plugin Name: Thinkpawsitive Membership Cart Calculations
   Plugin URI:  https://icshelpsyou.com
-  Description: Calculate cart items prices based on ThinkPawsitive's business model.
+  Description: Calculate cart items prices based on Woocommerce Membership and ThinkPawsitive's business model.
   Version:     1.0
   Author:      ICS, LLC
   Author URI:  https://icshelpsyou.com
@@ -26,12 +26,19 @@ function var_awesome($value) {
  * TP-Memb USE!.xlsx spreadsheet in the root directory of this plugin.
  */
 function thinkpawsitive_before_calculate_totals( $cart_obj ) {
- if ( is_admin() && ! defined( 'DOING_AJAX' ) || !is_user_logged_in() || !function_exists( 'wc_memberships' )) {
+  if ( is_admin() && ! defined( 'DOING_AJAX' ) || !is_user_logged_in() || !function_exists( 'wc_memberships' )) {
    return;
  }
 
+ $memberships_max_classes = array(
+   'gold' => 6,
+   'silver' => 4,
+   'bronze' => 4
+ );
+
  $user = wp_get_current_user();
  $user_id = $user->ID;
+ $user_membership_plan = NULL;
 
 /**
  * get current user's membership
@@ -40,10 +47,35 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
  if ( !empty( $memberships ) ) {
    // do something for this active member
    foreach($memberships as $membership) {
-     // var_awesome($membership->plan);
-     var_awesome($membership->plan->name);
+     $user_membership_plan = strtolower($membership->plan->name);
    }
  }
+
+
+
+ // example
+ // public function get_customer_total_order() {
+ //     $customer_orders = get_posts( array(
+ //         'numberposts' => - 1,
+ //         'meta_key'    => '_customer_user',
+ //         'meta_value'  => get_current_user_id(),
+ //         'post_type'   => array( 'shop_order' ),
+ //         'post_status' => array( 'wc-completed' ),
+ //         'date_query' => array(
+ //             'after' => date('Y-m-d', strtotime('-10 days')),
+ //             'before' => date('Y-m-d', strtotime('today'))
+ //         )
+ //
+ //     ) );
+ //
+ //     $total = 0;
+ //     foreach ( $customer_orders as $customer_order ) {
+ //         $order = wc_get_order( $customer_order );
+ //         $total += $order->get_total();
+ //     }
+ //
+ //     return $total;
+ // }
 
 
  /**
@@ -55,6 +87,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
 
   ## ==> Define HERE the statuses of that orders
   $order_statuses = array('wc-on-hold', 'wc-processing', 'wc-completed');
+
   // Getting current customer orders
   $customer_orders = wc_get_orders(array(
     'meta_key' => '_customer_user',
@@ -76,7 +109,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
    // Iterating through current orders items
    foreach($order->get_items() as $item_id => $item) {
      $classCount++;
-     var_awesome($item['product_id'] . ' ' . $item['name']);
+     // var_awesome($item['product_id'] . ' ' . $item['name']);
 
      // // The corresponding product ID (Added Compatibility with WC 3+)
      // $product_id = method_exists( $item, 'get_product_id' ) ? $order->get_product_id() : $item['product_id'];
@@ -92,53 +125,25 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
 
 
  /**
-  * get items in cart
+  * check get items in cart
   */
  foreach( $cart_obj->get_cart() as $key=>$value ) {
-   var_awesome($value);
+   // var_awesome($value['data']->get_category_ids());
    $classCount++;
-
-   // change the prices if need be.
-   // $price = 100;
-   // $value['data']->set_price( ( $price ) );
  }
 
- var_awesome('Class count:' . $classCount);
 
+ /**
+   * change the prices if need be.
+   */
+  if ($classCount <= $memberships_max_classes[$user_membership_plan]) {
+    foreach( $cart_obj->get_cart() as $key=>$value ) {
+      $price = 0;
+      // var_awesome($value['data']->get_category_ids());
+      $value['data']->set_price( ( $price ) );
+    }
+  }
 }
 add_action( 'woocommerce_before_calculate_totals', 'thinkpawsitive_before_calculate_totals', 10, 1 );
 
-
-
-
-// example
-
-// public function get_customer_total_order() {
-//     $customer_orders = get_posts( array(
-//         'numberposts' => - 1,
-//         'meta_key'    => '_customer_user',
-//         'meta_value'  => get_current_user_id(),
-//         'post_type'   => array( 'shop_order' ),
-//         'post_status' => array( 'wc-completed' ),
-//         'date_query' => array(
-//             'after' => date('Y-m-d', strtotime('-10 days')),
-//             'before' => date('Y-m-d', strtotime('today'))
-//         )
-//
-//     ) );
-//
-//     $total = 0;
-//     foreach ( $customer_orders as $customer_order ) {
-//         $order = wc_get_order( $customer_order );
-//         $total += $order->get_total();
-//     }
-//
-//     return $total;
-// }
-
-
-
-
-
-
- ?>
+?>
