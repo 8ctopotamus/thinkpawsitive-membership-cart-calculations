@@ -11,12 +11,43 @@
 */
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
-
+// For testing
 function var_awesome($value) {
   echo '<pre>';
   var_export($value);
   echo '</pre>';
 }
+
+
+
+ /*
+ Handles month/year increment calculations in a safe way,
+ avoiding the pitfall of 'fuzzy' month units.
+
+ Returns a DateTime object with incremented month values, and a date value == 1.
+ */
+ // function incrementDate($startDate, $monthIncrement = 0) {
+ //   $startingTimeStamp = $startDate->getTimestamp();
+ //   // Get the month value of the given date:
+ //   $monthString = date('Y-m', $startingTimeStamp);
+ //   // Create a date string corresponding to the 1st of the give month,
+ //   // making it safe for monthly calculations:
+ //   $safeDateString = "first day of $monthString";
+ //   // Increment date by given month increments:
+ //   $incrementedDateString = "$safeDateString $monthIncrement month";
+ //   $newTimeStamp = strtotime($incrementedDateString);
+ //   $newDate = DateTime::createFromFormat('U', $newTimeStamp);
+ //   return $newDate;
+ // }
+ // $currentDate = new DateTime();
+ // $oneMonthAgo = incrementDate($currentDate, -1);
+ // $twoMonthsAgo = incrementDate($currentDate, -2);
+ // $threeMonthsAgo = incrementDate($currentDate, -3);
+ //
+ // echo "THIS: ".$currentDate->format('F Y') . "<br>";
+ // echo "1 AGO: ".$oneMonthAgo->format('F Y') . "<br>";
+ // echo "2 AGO: ".$twoMonthsAgo->format('F Y') . "<br>";
+ // echo "3 AGO: ".$threeMonthsAgo->format('F Y') . "<br>";
 
 /**
  * Check the user's membership, past orders of current month, and any cart items.
@@ -24,14 +55,12 @@ function var_awesome($value) {
  * Then just cart prices according to TP Biz plan, outlined in the
  * tp-biz-plan.xlsx spreadsheet in the root directory of this plugin.
  */
-
-
-function thinkpawsitive_get_orders_from_months($id, $months) {
+function thinkpawsitive_get_past_orders($id, $months) {
   $order_statuses = array('wc-on-hold', 'wc-processing', 'wc-completed');
   $now = new \DateTime('now');
   $month = $now->format('m');
   $year = $now->format('Y');
-
+  // TODO: figure out how to determine past business quater?
   return wc_get_orders(array(
     'meta_key' => '_customer_user',
     'meta_value' => $id,
@@ -44,7 +73,7 @@ function thinkpawsitive_get_orders_from_months($id, $months) {
   ));
 }
 
-function thinkpawsitive_count_orders($customer_orders, $cat_ids) {
+function thinkpawsitive_count_past_orders($customer_orders, $cat_ids) {
   $count = 0;
   foreach($customer_orders as $order ) {
     // Order ID (added WooCommerce 3+ compatibility)
@@ -62,20 +91,6 @@ function thinkpawsitive_count_orders($customer_orders, $cat_ids) {
   return $count;
 }
 
-function thinkpawsitive_update_cart($maxAmount, $cat_ids, $cart_obj) {
-  foreach( $cart_obj->get_cart() as $key=>$value ) {
-    $item_cats = $value['data']->get_category_ids();
-    $isInCat = !empty(array_intersect($cat_ids, $item_cats));
-    if ($isInCat) {
-      $classCount++;
-      // change the price if within $memberships_max_classes limits
-      if ($classCount <= $maxAmount) {
-        $price = 0;
-        $value['data']->set_price( ( $price ) );
-      }
-    }
-  }
-}
 
 function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   if ( is_admin() && ! defined( 'DOING_AJAX' ) || !is_user_logged_in() || !function_exists( 'wc_memberships' )) {
@@ -96,10 +111,14 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
       $user_membership_plan = strtolower($membership->plan->name);
     }
   } else {
-    return;
+    die();
   }
 
-  // FREE CLASSES
+
+
+  /**
+   * FREE CLASSES / mo
+  */
   $memberships_max_classes = array(
     'gold' => 6,
     'silver' => 4,
@@ -108,43 +127,106 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   $countable_class_cat_ids = array(
     33, // training classes category
   );
+ /* check the current user's orders from this month */
+  $customer_orders = thinkpawsitive_get_past_orders($user_id, 1);
+  $classCount = thinkpawsitive_count_past_orders($customer_orders, $countable_class_cat_ids);
+  $maxClassAmount = $memberships_max_classes[$user_membership_plan];
+  /**
+   * Count items items in cart and adjust price
+   */
+  foreach( $cart_obj->get_cart() as $key=>$value ) {
+    $item_cats = $value['data']->get_category_ids();
+    $isInCat = !empty(array_intersect($countable_class_cat_ids, $item_cats));
+    if ($isInCat) {
+      $classCount++;
+      // change the price if within limits
+      if ($classCount <= $maxClassAmount) {
+        $price = 0;
+        $value['data']->set_price( ( $price ) );
+      }
+    }
+  }
 
-  $customer_orders = thinkpawsitive_get_orders_from_months($user_id, 1);
-  $classCount = thinkpawsitive_count_orders($customer_orders, $countable_class_cat_ids);
-  thinkpawsitive_update_cart($memberships_max_classes[$user_membership_plan], $countable_class_cat_ids, $cart_obj);
 
 
-  // TODO
-  // 1 free private lesson per qtr cat 52
-  // (1 free 20 minute pro swim) OR (1 free Mat or Turf Rental)
+  /**
+   * FREE BOOKABLES / mo
+  */
+  // (1 free 20 minute pro swim) OR (1 free Mat or Turf Rental) / mo
+  $memberships_max_bookables = array(
+    'gold' => 1,
+    'silver' => 1,
+  );
+  $countable_bookables_cat_ids = array(
+    46, // Turf Rental
+    47, // Mat Rental
+  );
+  $customer_orders = thinkpawsitive_get_past_orders($user_id, 1);
+  $bookablesCount = thinkpawsitive_count_past_orders($customer_orders, $countable_bookables_cat_ids);
+  $maxBookablesAmount = $memberships_max_bookables[$user_membership_plan];
+  // /* check items in cart */
+  foreach( $cart_obj->get_cart() as $key=>$value ) {
+    $item_cats = $value['data']->get_category_ids();
+    $isInCat = !empty(array_intersect($countable_bookables_cat_ids, $item_cats));
+    if ($isInCat) {
+      $bookablesCount++;
+      // change the price if within limits
+      if ($bookablesCount <= $maxBookablesAmount) {
+        $price = 0;
+        $value['data']->set_price( ( $price ) );
+      }
+    }
+  }
 
 
-  // Determine
+  /**
+   * FREE Private Lesson/ Qtr
+  */
+  // TODO: 1 free private lesson per qtr cat 52
+  $memberships_max_privLessons = array(
+    'gold' => 1,
+    'silver' => 1,
+  );
+  $countable_privLessons_cat_ids = array(
+    52, // Private Lessons
+  );
+  $customer_orders = thinkpawsitive_get_past_orders($user_id, 3);
+  $privLessonsCount = thinkpawsitive_count_past_orders($customer_orders, $countable_privLessons_cat_ids);
+  $maxPrivLessonsAmount = $memberships_max_privLessons[$user_membership_plan];
+  // /* check items in cart */
+  foreach( $cart_obj->get_cart() as $key=>$value ) {
+    $item_cats = $value['data']->get_category_ids();
+    $isInCat = !empty(array_intersect($countable_privLessons_cat_ids, $item_cats));
+    if ($isInCat) {
+      $privLessonsCount++;
+      // change the price if within limits
+      if ($privLessonsCount <= $maxPrivLessonsAmount) {
+        $price = 0;
+        $value['data']->set_price( ( $price ) );
+      }
+    }
+  }
 
-  // FREE BOOKABLES:
-    // 46 Turf Rental
-    // 47 Mat Rental
 
 
+
+// NOTE: you can use this to test, but echoing from here causes issues
+
+  // <style media="screen">
+  //   .membership-status-bar {
+  //     background: black;
+  //     color: #fff;
+  //     padding: 3px 30px;
+  //   }
+  // </style>
 
   // Status bar
+  // echo '<div class="membership-status-bar">';
+  // echo 'Membership level: <span style="color: '. $user_membership_plan .';">' . $user_membership_plan . '.</span>';
+  // echo ' FREE Classes ' . $classCount . ' / ' . $maxClassAmount . '. FREE Bookables: ' . $bookablesCount . ' / ' . $maxBookablesAmount . '.';
+  // echo '</div>';
 
-  ?>
-
-  <style media="screen">
-    .membership-status-bar {
-      background: black;
-      color: #fff;
-      padding: 3px 30px;
-    }
-  </style>
-
-  <?php
-
-  echo '<div class="membership-status-bar">';
-  echo 'Membership level: <span style="color: '. $user_membership_plan .';">' . $user_membership_plan . '.</span>';
-  echo ' You have used ' . $classCount . ' of your ' . $memberships_max_classes[$user_membership_plan] . ' FREE classes this month.';
-  echo '</div>';
+  // var_dump('TEST');
 
 }
 
