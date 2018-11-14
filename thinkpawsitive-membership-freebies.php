@@ -25,6 +25,7 @@ function tp_memberships_freebies_init() {
   include('includes/tp-my-account-status.php');
   include('includes/tp-cart-calculate.php');
 }
+
 add_action( 'wp_loaded', 'tp_memberships_freebies_init' );
 
 ?>
