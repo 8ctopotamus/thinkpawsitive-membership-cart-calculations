@@ -12,8 +12,8 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
 
   // Count Past Orders
   foreach ($_SESSION['tp_user_memberships'] as $membership) {
-    foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $value) {
-      if ($value === 0)
+    foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
+      if ($rules['limit'] === 0)
         continue;
       $count = count_past_orders_by_cat($customer_past_orders, $_SESSION['category_ids'][$key]);
       $current_freebies_count[$key] = $count;
@@ -25,8 +25,8 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
     $item_cats = $value['data']->get_category_ids();
     if ($item_cats) {
       foreach ($_SESSION['tp_user_memberships'] as $membership) {
-        foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $limit) {
-          if ($limit === 0)
+        foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
+          if ($rules['limit'] === 0)
             continue;
           $matches = !empty(array_intersect($_SESSION['category_ids'][$key], $item_cats));
           if ($matches) {
@@ -46,11 +46,11 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
     $item_cats = $value['data']->get_category_ids();
     if ($item_cats) {
       foreach ($_SESSION['tp_user_memberships'] as $membership) {
-        foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $limit) {
-          if ($value === 0)
+        foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
+          if ($rules['limit'] === 0)
             continue;
           $matches = !empty(array_intersect($_SESSION['category_ids'][$key], $item_cats));
-          if ($matches && $current_freebies_count[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership]) {
+          if ($matches && $current_freebies_count[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership][$key]['limit']) {
             $price = 0;
             $value['data']->set_price( ( $price ) );
           }
@@ -58,6 +58,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
       }
     }
   }
+
 }
 
 ?>
