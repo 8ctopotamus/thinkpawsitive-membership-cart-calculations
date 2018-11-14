@@ -1,4 +1,10 @@
 <?php
+// For testing
+function var_awesome($value) {
+  echo '<pre>';
+  var_export($value);
+  echo '</pre>';
+}
 
 function thinkpawsitive_get_past_orders($user_id) {
    $order_statuses = array('wc-on-hold', 'wc-processing', 'wc-completed');
@@ -18,10 +24,9 @@ function thinkpawsitive_get_past_orders($user_id) {
    ));
 }
 
-function count_past_orders_by_cat ($orders, $cats) {
+function count_past_orders_by_cat($orders, $cats) {
   $count = 0;
   foreach($orders as $order) {
-    // Iterating through current orders items
     foreach($order->get_items() as $item_id => $item) {
       $product = wc_get_product( $item['product_id'] );
       $product_cats = $product->get_category_ids();
