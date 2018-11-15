@@ -12,7 +12,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   $current_freebies_object = array();
 
   // Count Past Orders
-  foreach ($_SESSION['tp_user_memberships'] as $membership) {
+  foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
     foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
       if ($rules['limit'] === 0)
         continue;
@@ -25,7 +25,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   foreach( $cart_obj->get_cart() as $key=>$value ) {
     $item_cats = $value['data']->get_category_ids();
     if ($item_cats) {
-      foreach ($_SESSION['tp_user_memberships'] as $membership) {
+      foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
         foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
           if ($rules['limit'] === 0)
             continue;
@@ -46,7 +46,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   foreach( $cart_obj->get_cart() as $key=>$value ) {
     $item_cats = $value['data']->get_category_ids();
     if ($item_cats) {
-      foreach ($_SESSION['tp_user_memberships'] as $membership) {
+      foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
         foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
           if ($rules['limit'] === 0)
             continue;

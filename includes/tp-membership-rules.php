@@ -1,15 +1,16 @@
 <?php
 
-// The bookable products category ids
+// The bookable products category ids from wordpress
 $_SESSION['category_ids'] = array(
   'Training Classes' => array(57),
   'Turf or Mat Rentals' => array(46, 47),
-  'Private Lessons' => array(36), //52
+  'Private Lessons' => array(52),
   'K9 Splash 20 Minute' => array(62),
   'K9 Splash 30 Minute' => array(63),
 );
 
 // The maximum number of free bookable products allowed per month, organized by membership.
+// As outlined in the tp-biz-plan.xlsx.
 $_SESSION['thinkpawsitive_memberships_max_rules'] = array(
   'Gold' => array(
     'Training Classes' => array(

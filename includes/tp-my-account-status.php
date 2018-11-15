@@ -5,7 +5,7 @@ function tp_memberships_freebies_status() {
   $user_id = $user->ID;
   $customer_orders = thinkpawsitive_get_past_orders($user_id);
 
-  foreach ($_SESSION['tp_user_memberships'] as $membership) {
+  foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
     echo '<h3>' . $membership . ' Membership - Freebies</h3>';
     echo '<ul>';
     foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {

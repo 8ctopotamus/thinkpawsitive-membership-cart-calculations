@@ -18,7 +18,8 @@ function thinkpawsitive_get_past_orders($user_id) {
     )
   ));
 
-  // get past orders from the current business quarter
+  // get past orders from within the current business quarter,
+  // but before this current month
   if (1 <= $month && $month <= 3) {
     $quarterStartMonth = 1;
   } else if (4 <= $month && $month <= 6) {
@@ -43,8 +44,8 @@ function thinkpawsitive_get_past_orders($user_id) {
     )
   ));
 
-  // if any of the quarter's orders have an product from the "private lesson" category,
-  // combine this order with this $past_orders if found.
+  // if any of the quarter's orders have a product from the "Private Lessons" category,
+  // combine this order with $past_orders.
   foreach ($current_quarter_orders as $order) {
     foreach($order->get_items() as $item_id => $item) {
       $product = wc_get_product( $item['product_id'] );
