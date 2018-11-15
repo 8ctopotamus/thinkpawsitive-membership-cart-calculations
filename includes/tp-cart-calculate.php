@@ -24,7 +24,10 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   // Count Cart Items and
   // adjust cart prices, if necessary
   foreach( $cart_obj->get_cart() as $key=>$value ) {
-    if (empty($value['booking'])) { continue; } // skip if is not bookable product
+    // skip if is not bookable product
+    if (empty($value['booking'])) {
+      continue;
+    }
     $item_cats = $value['data']->get_category_ids();
     if ($item_cats) {
       foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
@@ -33,11 +36,13 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
             continue;
           $matches = !empty(array_intersect($_SESSION['category_ids'][$key], $item_cats));
           if ($matches) {
+            // keep counting!
             if (array_key_exists($key, $current_freebies_object)) {
               $current_freebies_object[$key]++;
             } else {
               $current_freebies_object[$key] = 1;
             }
+            // adjust price
             if ($current_freebies_object[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership][$key]['limit']) {
               $price = 0;
               $value['data']->set_price( ( $price ) );
@@ -47,7 +52,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
       }
     }
   }
-  
+
 }
 
 ?>
