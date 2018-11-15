@@ -5,10 +5,11 @@ add_action( 'woocommerce_before_calculate_totals', 'thinkpawsitive_before_calcul
 function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   $user = wp_get_current_user();
   $user_id = $user->ID;
+
   $customer_past_orders = thinkpawsitive_get_past_orders($user_id);
 
   // store the counts
-  $current_freebies_count = array();
+  $current_freebies_object = array();
 
   // Count Past Orders
   foreach ($_SESSION['tp_user_memberships'] as $membership) {
@@ -16,7 +17,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
       if ($rules['limit'] === 0)
         continue;
       $count = count_past_orders_by_cat($customer_past_orders, $_SESSION['category_ids'][$key]);
-      $current_freebies_count[$key] = $count;
+      $current_freebies_object[$key] = $count;
     }
   }
 
@@ -30,10 +31,10 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
             continue;
           $matches = !empty(array_intersect($_SESSION['category_ids'][$key], $item_cats));
           if ($matches) {
-            if (array_key_exists($key, $current_freebies_count)) {
-              $current_freebies_count[$key]++;
+            if (array_key_exists($key, $current_freebies_object)) {
+              $current_freebies_object[$key]++;
             } else {
-              $current_freebies_count[$key] = 1;
+              $current_freebies_object[$key] = 1;
             }
           }
         }
@@ -50,7 +51,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
           if ($rules['limit'] === 0)
             continue;
           $matches = !empty(array_intersect($_SESSION['category_ids'][$key], $item_cats));
-          if ($matches && $current_freebies_count[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership][$key]['limit']) {
+          if ($matches && $current_freebies_object[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership][$key]['limit']) {
             $price = 0;
             $value['data']->set_price( ( $price ) );
           }
@@ -58,6 +59,9 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
       }
     }
   }
+
+
+  var_dump($current_freebies_object);
 
 }
 
