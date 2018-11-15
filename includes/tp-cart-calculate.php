@@ -21,8 +21,10 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
     }
   }
 
-  // Count Cart Items
+  // Count Cart Items and
+  // adjust cart prices, if necessary
   foreach( $cart_obj->get_cart() as $key=>$value ) {
+    if (empty($value['booking'])) { continue; } // skip if is not bookable product
     $item_cats = $value['data']->get_category_ids();
     if ($item_cats) {
       foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
@@ -36,33 +38,16 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
             } else {
               $current_freebies_object[$key] = 1;
             }
+            if ($current_freebies_object[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership][$key]['limit']) {
+              $price = 0;
+              $value['data']->set_price( ( $price ) );
+            }
           }
         }
       }
     }
   }
-
-  // Adjust cart prices, if necessary
-  foreach( $cart_obj->get_cart() as $key=>$value ) {
-    $item_cats = $value['data']->get_category_ids();
-    if ($item_cats) {
-      foreach ($_SESSION['tp_user_membership_plans'] as $membership) {
-        foreach($_SESSION['thinkpawsitive_memberships_max_rules'][$membership] as $key => $rules) {
-          if ($rules['limit'] === 0)
-            continue;
-          $matches = !empty(array_intersect($_SESSION['category_ids'][$key], $item_cats));
-          if ($matches && $current_freebies_object[$key] <= $_SESSION['thinkpawsitive_memberships_max_rules'][$membership][$key]['limit']) {
-            $price = 0;
-            $value['data']->set_price( ( $price ) );
-          }
-        }
-      }
-    }
-  }
-
-
-  var_dump($current_freebies_object);
-
+  
 }
 
 ?>

@@ -4,7 +4,7 @@
 $_SESSION['category_ids'] = array(
   'Training Classes' => array(57),
   'Turf or Mat Rentals' => array(46, 47),
-  'Private Lessons' => array(52),
+  'Private Lessons' => array(64),
   'K9 Splash 20 Minute' => array(62),
   'K9 Splash 30 Minute' => array(63),
 );
