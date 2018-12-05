@@ -12,20 +12,21 @@
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
-function tp_memberships_freebies_init() {
-  if (is_admin() || !is_user_logged_in() || !function_exists( 'wc_memberships' )) {
-    return;
-  }
+// tally overages
+include('includes/overages/tp-overages.php');
 
-  session_start();
-
-  include('includes/tp-get-member.php');
-  include('includes/tp-membership-rules.php');
-  include('includes/tp-functions.php');
-  include('includes/tp-my-account-status.php');
-  include('includes/tp-cart-calculate.php');
-}
-
-add_action( 'wp_loaded', 'tp_memberships_freebies_init' );
+// cart calculations
+// function tp_memberships_freebies_init() {
+//   if (is_admin() || !is_user_logged_in() || !function_exists( 'wc_memberships' )) {
+//     return;
+//   }
+//   session_start();
+//   include('includes/cart-calculations/tp-get-member.php');
+//   include('includes/cart-calculations/tp-membership-rules.php');
+//   include('includes/cart-calculations/tp-functions.php');
+//   include('includes/cart-calculations/tp-my-account-status.php');
+//   include('includes/cart-calculations/tp-cart-calculate.php');
+// }
+// add_action( 'wp_loaded', 'tp_memberships_freebies_init' );
 
 ?>

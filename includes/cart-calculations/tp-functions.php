@@ -67,6 +67,7 @@ function count_past_orders_by_cat($orders, $cats) {
   foreach($orders as $order) {
     foreach($order->get_items() as $item_id => $item) {
       $product = wc_get_product( $item['product_id'] );
+      // skip if not a wc bookable product
       if (!$product->is_type( 'booking' )) {
         continue;
       }

@@ -24,7 +24,7 @@ function thinkpawsitive_before_calculate_totals( $cart_obj ) {
   // Count Cart Items and
   // adjust cart prices, if necessary
   foreach( $cart_obj->get_cart() as $key=>$value ) {
-    // skip if is not bookable product
+    // skip if is not wc bookable product
     if (empty($value['booking'])) {
       continue;
     }
