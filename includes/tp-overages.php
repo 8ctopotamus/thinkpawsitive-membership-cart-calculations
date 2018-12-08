@@ -2,16 +2,17 @@
   function nice_var_dump($val) {
     echo '<pre>';
     var_dump($val);
-    echo '<pre>';
+    echo '</pre>';
   }
 
   function determineBGColor($membership) {
+    $membership = strtolower($membership);
     $bgClass = '';
-    if (strpos($membership, 'Gold') !== false) {
+    if (strpos($membership, 'gold') !== false) {
       $bgClass = 'gold';
-    } else if (strpos($membership, 'Silver') !== false) {
+    } else if (strpos($membership, 'silver') !== false) {
       $bgClass = 'silver';
-    } else if (strpos($membership, 'Bronze') !== false) {
+    } else if (strpos($membership, 'bronze') !== false) {
       $bgClass = 'bronze';
     }
     return $bgClass;
@@ -22,20 +23,25 @@
   }
 
   function renderMemberTemplate($member) {
-      $name = $member['name'];
-      $email = $member['email'];
-      $memberships = $member['memberships'];
-      $products = $member['products_by_cat'];
+    $name = $member['name'];
+    $email = $member['email'];
+    $memberships = $member['memberships'];
+    $products_by_cat = $member['products_by_cat'];
     ?>
       <div class="tp-member-card">
         <h3 class="tp-member-name"><?php echo $name; ?></h3>
         <?php foreach($memberships as $membership): ?>
           <span class="tp-membership-label <?php echo determineBGColor($membership->plan->name); ?>"><?php echo $membership->plan->name; ?></span>
         <?php endforeach; ?>
-        <a href="mailto: <?php echo $email; ?>"><?php echo $email; ?></a>
+        <p><a href="mailto: <?php echo $email; ?>"><?php echo $email; ?></a></p>
         <hr/>
-        <?php foreach($products as $product): ?>
-          <a href="<?php echo $product->get_permalink(); ?>" target="_blank"><?php echo $product->get_name(); ?></a>
+        <?php foreach($products_by_cat as $cat => $products): ?>
+          <h4><?php echo $cat; ?></h4>
+          <ol>
+            <?php foreach($products as $product): ?>
+              <li><a href="<?php echo $product->get_permalink(); ?>" target="_blank"><?php echo $product->get_name(); ?></a></li>
+            <?php endforeach; ?>
+          </ol>
         <?php endforeach; ?>
       </div>
     <?php
@@ -46,7 +52,11 @@
     // loop over past month's orders
     $order_statuses = array('wc-on-hold', 'wc-processing', 'wc-completed');
     $past_orders = wc_get_orders(array(
-      'date_query' => date("Y-n-j", strtotime("first day of previous month")),
+      // 'date_query' => date("Y-n-j", strtotime("first day of previous month")),
+      'date_query' => array(
+        'after' => date("Y-n-j", strtotime("first day of previous month")),
+        'before' => date("Y-n-j", strtotime("last day of previous month"))
+      ),
       'post_status' => $order_statuses,
       'numberposts' => -1,
     ));
@@ -74,7 +84,18 @@
           if (!$product->is_type( 'booking' )) {
             continue;
           }
-          array_push($RUNNING_TOTAL[$user_id]['products_by_cat'], $product);
+          // check if product category ids are in membership rules
+          $product_cats = $product->get_category_ids();
+          foreach($_SESSION['category_ids'] as $cat_name => $cat_id):
+            $matches = array_intersect($cat_id, $product_cats);
+            if ($matches) {
+              if (!isset($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name])) {
+                $RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name] = array($product);
+              } else {
+                array_push($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name], $product);
+              }
+            }
+          endforeach;
         endforeach;
       }
     endforeach;
