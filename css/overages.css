@@ -1,0 +1,39 @@
+:root {
+  --bronze: #8C7853;
+  --silver: #E6E8FA;
+  --gold: #CFB53B;
+}
+
+.tp-membership-overages h1 {
+  margin-bottom: 25px;
+}
+
+.tp-member-card {
+  background: #fff;
+  padding: 16px;
+  box-shadow: 0px 2px 10px rgba(0,0,0,.25);
+  margin-bottom: 25px;
+}
+
+.tp-member-name {
+  display: inline-block;
+}
+
+.tp-membership-label {
+  background: #ddd;
+  border-radius: 4px;
+  font-size: .8rem;
+  padding: 2px;
+}
+
+.gold {
+  background: var(--gold);
+}
+
+.silver {
+  background: var(--silver);
+}
+
+.bronze {
+  background: var(--bronze);
+}

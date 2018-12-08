@@ -2,8 +2,8 @@
 /*
   Plugin Name: Thinkpawsitive Membership Freebies
   Plugin URI:  https://icshelpsyou.com
-  Description: Calculate cart items prices based on Woocommerce Membership and ThinkPawsitive's business model.
-  Version:     1.0
+  Description: Displays membership overages from previous month.
+  Version:     2.0
   Author:      ICS, LLC
   Author URI:  https://icshelpsyou.com
   License:     GPL2
@@ -12,10 +12,19 @@
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
-// tally overages
-include('includes/overages/tp-overages.php');
+session_start();
+include('includes/tp-membership-rules.php');
+include('includes/tp-overages.php');
 
-// cart calculations
+function tp_admin_style() {
+  wp_register_style('tp-admin-styles', plugins_url('/css/overages.css',  __FILE__ ));
+  if (!empty($_GET['page']) && $_GET['page'] === 'tp_membership_overages'):
+    wp_enqueue_style('tp-admin-styles');
+  endif;
+}
+add_action('admin_enqueue_scripts', 'tp_admin_style');
+
+// cart calculations - this strategy has been scrapped.
 // function tp_memberships_freebies_init() {
 //   if (is_admin() || !is_user_logged_in() || !function_exists( 'wc_memberships' )) {
 //     return;
