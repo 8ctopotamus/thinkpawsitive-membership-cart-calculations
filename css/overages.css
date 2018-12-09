@@ -14,6 +14,15 @@
   margin-bottom: 25px;
 }
 
+.tp-date-nav .dashicons {
+  vertical-align: middle;
+}
+
+.tp-date-nav .dashicons:hover {
+  background: #dedede;
+  border-radius: 3px;
+}
+
 .date-nav-link {
   text-decoration: none;
 }
@@ -28,6 +37,7 @@
 
 .tp-member-name {
   display: inline-block;
+  margin-top: 0;
 }
 
 .tp-membership-label {
@@ -49,6 +59,10 @@
 .bronze {
   color: white;
   background: var(--bronze);
+}
+
+.tp-cat-grid {
+  display: grid;
 }
 
 .tp-cat-group {
