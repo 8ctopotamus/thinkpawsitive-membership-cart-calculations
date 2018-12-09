@@ -1,7 +1,10 @@
 :root {
-  --bronze: #8C7853;
+  /* --bronze: #8C7853;
   --silver: #E6E8FA;
-  --gold: #CFB53B;
+  --gold: #CFB53B; */
+  --bronze: #e9d1a6;
+  --silver: #E6E8FA;
+  --gold: #ecdb8c;
 }
 
 .tp-membership-overages-page-title {
@@ -11,7 +14,7 @@
   -webkit-box-pack: justify;
       -ms-flex-pack: justify;
           justify-content: space-between;
-  margin-bottom: 25px;
+  margin-bottom: 25px !important;
 }
 
 .tp-date-nav .dashicons {
@@ -36,8 +39,11 @@
 }
 
 .tp-member-name {
-  display: inline-block;
   margin-top: 0;
+}
+
+.overage {
+  color: red;
 }
 
 .tp-membership-label {
@@ -57,12 +63,16 @@
 }
 
 .bronze {
-  color: white;
   background: var(--bronze);
 }
 
-.tp-cat-grid {
+.tp-cats-container {
+  display: -ms-grid;
   display: grid;
+  -ms-grid-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
+  /* grid-template-rows: 1fr 1fr 1fr; */
+  /* grid-template-areas: ". . ." ". . ." ". . ."; */
 }
 
 .tp-cat-group {
@@ -73,8 +83,12 @@
 
 .tp-cat-group-title {
   border-bottom: 1px solid #ddd;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: space-between;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   margin-top: 0;
 }
 

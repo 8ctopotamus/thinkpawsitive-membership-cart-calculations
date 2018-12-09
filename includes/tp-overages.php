@@ -18,11 +18,22 @@
     return $bgClass;
   }
 
-  function renderOverageWarning($prod_count, $limit) {
-    if ($prod_count > $limit): ?>
-      <div class="tp-overage-alert"><span class="dashicons dashicons-warning"></span>OVERAGE!</div>
-      <?php
-    endif;
+  function renderOverageWarning($cat, $prod_count, $limit) {
+    $isOverLimit = $prod_count > $limit;
+    $overageClass = $isOverLimit ? 'overage' : '';
+    ?>
+      <h4 class="tp-cat-group-title">
+        <span class="<?php echo$overageClass; ?>">
+          <?php echo $cat . ' - ' . $prod_count . '/' . $limit; ?>
+        </span>
+        <?php
+          if ($isOverLimit): ?>
+            <div class="tp-overage-alert"><span class="dashicons dashicons-warning"></span>OVERAGE!</div>
+            <?php
+          endif;
+        ?>
+      </h4>
+    <?php
   }
 
   function get_membership_cat_limit($cat, $memberships) {
@@ -59,30 +70,27 @@
     $products_by_cat = $member['products_by_cat'];
     ?>
       <div class="tp-member-card">
-        <h3 class="tp-member-name"><?php echo $name; ?> - </h3>
+        <h3 class="tp-member-name"><?php echo $name; ?> - <small><a href="mailto: <?php echo $email; ?>"><?php echo $email; ?></a></small></h3>
+        Memberships:
         <?php foreach($memberships as $membership): ?>
           <span class="tp-membership-label <?php echo determineMembershipBGColor($membership->plan->name); ?>"><?php echo $membership->plan->name; ?></span>
         <?php endforeach; ?>
-        <a href="mailto: <?php echo $email; ?>"><?php echo $email; ?></a>
         <hr/>
-        <?php foreach($products_by_cat as $cat => $products):
-          $prod_count = count($products);
-          $limit = get_membership_cat_limit($cat, $memberships);
-          ?>
-          <div class="tp-cat-grid">
-            <div class="tp-cat-group">
-              <h4 class="tp-cat-group-title">
-                <?php echo $cat . ' - ' . $prod_count . '/' . $limit; ?>
-                <?php echo renderOverageWarning($prod_count, $limit); ?>
-              </h4>
-              <ol>
-                <?php foreach($products as $product):?>
-                  <li><?php echo $product->get_name(); ?> <a href="<?php echo admin_url( 'post.php?post=' . absint( $product->order_id ) . '&action=edit' ); ?>" target="_blank">View order</a></li>
-                <?php endforeach; ?>
-              </ol>
-            </div>
-          </div>
-        <?php endforeach; ?>
+        <div class="tp-cats-container">
+          <?php foreach($products_by_cat as $cat => $products):
+            $prod_count = count($products);
+            $limit = get_membership_cat_limit($cat, $memberships);
+            ?>
+              <div class="tp-cat-group">
+                <?php renderOverageWarning($cat, $prod_count, $limit); ?>
+                <ol>
+                  <?php foreach($products as $product):?>
+                    <li><?php echo $product->get_name(); ?> <a href="<?php echo admin_url( 'post.php?post=' . absint( $product->order_id ) . '&action=edit' ); ?>" target="_blank">View order</a></li>
+                  <?php endforeach; ?>
+                </ol>
+              </div>
+          <?php endforeach; ?>
+        </div>
       </div>
     <?php
   }
