@@ -34,6 +34,20 @@
     endforeach;
   }
 
+  function renderDateNav($moStart) {
+    // nav link dates
+    $navDate = new DateTime( date("Y-m", $moStart) );
+    $navDate->modify( '-1 month' );
+    $prev = $navDate->format( 'Y-m' );
+    $navDate->modify( '+2 month' );
+    $next = $navDate->format( 'Y-m' );
+    ?>
+      <a class="date-nav-link" href="<?php echo admin_url('admin.php?page=tp_membership_overages&date=' . $prev); ?>"><<</a>
+      <?php echo date("F Y", $moStart); ?>
+      <a class="date-nav-link" href="<?php echo admin_url('admin.php?page=tp_membership_overages&date=' . $next); ?>">>></a>
+    <?php
+  }
+
   function renderMemberTemplate($member) {
     $name = $member['name'];
     $email = $member['email'];
@@ -65,7 +79,7 @@
   }
 
   function tp_get_bookings($start, $end) {
-    $bookingsQuery = new WP_Query(array(
+    $WCBookings = new WP_Query(array(
       'post_type' => 'wc_booking',
       'posts_per_page' => -1,
       'date_query' => array(
@@ -73,20 +87,20 @@
         'before' => date("Y-n-j", $end)
       ),
     ));
-    if ( $bookingsQuery->have_posts() ) :
-    	while ( $bookingsQuery->have_posts() ) : $bookingsQuery->the_post();
-    		// nice_var_dump(get_the_title());
-        $wcBooking = new WC_Booking( get_the_id() );
-        $current_timestamp = $wcBooking->get_start_date();
-        nice_var_dump($current_timestamp);
-        // nice_var_dump( $wcBooking->get_product() );
+    if ( $WCBookings->have_posts() ) :
+    	while ( $WCBookings->have_posts() ) : $WCBookings->the_post();
+        $booking = new WC_Booking( get_the_id() );
+        // $current_timestamp = $booking->get_start_date();
+        // nice_var_dump($current_timestamp);
+        // nice_var_dump( $booking->get_product() );
+        nice_var_dump( $booking->get_customer() );
     	endwhile;
     	wp_reset_postdata();
     else :
     	echo 'No bookables found.';
     endif;
 
-    // loop over past month's orders
+    // loop over past month's orders - OLD
     $order_statuses = array('wc-on-hold', 'wc-processing', 'wc-completed');
     $past_orders = wc_get_orders(array(
       // 'date_query' => date("Y-n-j", strtotime("first day of previous month")),
@@ -155,28 +169,15 @@
       $moStart = strtotime("first day of this month");
       $moEnd = strtotime("last day of this month");
     }
-    // nav link dates
-    $navDate = new DateTime( date("Y-m", $moStart) );
-    $navDate->modify( '-1 month' );
-    $prev = $navDate->format( 'Y-m' );
-    $navDate->modify( '+2 month' );
-    $next = $navDate->format( 'Y-m' );
-
-    // get bookings in date range
-    $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd);
-
     // page template
     ?>
       <div class="wrap tp-membership-overages">
-        <h1>
-          <?php echo esc_html( get_admin_page_title() ) ?>
-          <small>
-            <a class="date-nav-link" href="<?php echo admin_url('admin.php?page=tp_membership_overages&date=' . $prev); ?>"><<</a>
-            <?php echo date("F Y", $moStart); ?>
-            <a class="date-nav-link" href="<?php echo admin_url('admin.php?page=tp_membership_overages&date=' . $next); ?>">>></a>
-          </small>
+        <h1 class="tp-membership-overages-page-title">
+          <?php echo esc_html( get_admin_page_title() ); ?>
+          <small><?php renderDateNav( $moStart ); ?></small>
         </h1>
         <?php
+          $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd);
           foreach($RUNNING_TOTAL as $member):
             renderMemberTemplate($member);
           endforeach;

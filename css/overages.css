@@ -4,9 +4,13 @@
   --gold: #CFB53B;
 }
 
-.tp-membership-overages h1 {
+.tp-membership-overages-page-title {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: space-between;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   margin-bottom: 25px;
 }
 
@@ -17,7 +21,8 @@
 .tp-member-card {
   background: #fff;
   padding: 16px;
-  box-shadow: 0px 2px 10px rgba(0,0,0,.25);
+  -webkit-box-shadow: 0px 2px 10px rgba(0,0,0,.25);
+          box-shadow: 0px 2px 10px rgba(0,0,0,.25);
   margin-bottom: 25px;
 }
 
@@ -50,4 +55,14 @@
   background: #fafafa;
   max-width: 340px;
   padding: 6px;
+}
+
+@media (max-width: 767px) {
+  .tp-membership-overages-page-title {
+    text-align: center;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+            flex-direction: column;
+  }
 }
