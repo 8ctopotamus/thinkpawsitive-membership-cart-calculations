@@ -57,6 +57,17 @@
   padding: 6px;
 }
 
+.tp-cat-group-title {
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0;
+}
+
+.tp-overage-alert {
+  color: red;
+}
+
 @media (max-width: 767px) {
   .tp-membership-overages-page-title {
     text-align: center;

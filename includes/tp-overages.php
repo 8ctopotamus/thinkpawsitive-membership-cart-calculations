@@ -5,7 +5,7 @@
     echo '</pre>';
   }
 
-  function determineBGColor($membership_name) {
+  function determineMembershipBGColor($membership_name) {
     $membership_name = strtolower($membership_name);
     $bgClass = '';
     if (strpos($membership_name, 'gold') !== false) {
@@ -18,8 +18,11 @@
     return $bgClass;
   }
 
-  function calculate_overages() {
-
+  function renderOverageWarning($prod_count, $limit) {
+    if ($prod_count > $limit): ?>
+      <div class="tp-overage-alert"><span class="dashicons dashicons-warning"></span>OVERAGE!</div>
+      <?php
+    endif;
   }
 
   function get_membership_cat_limit($cat, $memberships) {
@@ -57,7 +60,7 @@
       <div class="tp-member-card">
         <h3 class="tp-member-name"><?php echo $name; ?> - </h3>
         <?php foreach($memberships as $membership): ?>
-          <span class="tp-membership-label <?php echo determineBGColor($membership->plan->name); ?>"><?php echo $membership->plan->name; ?></span>
+          <span class="tp-membership-label <?php echo determineMembershipBGColor($membership->plan->name); ?>"><?php echo $membership->plan->name; ?></span>
         <?php endforeach; ?>
         <p><a href="mailto: <?php echo $email; ?>"><?php echo $email; ?></a></p>
         <hr/>
@@ -66,7 +69,10 @@
           $limit = get_membership_cat_limit($cat, $memberships);
           ?>
           <div class="tp-cat-group">
-            <h4><?php echo $cat . ' - ' . $prod_count . '/' . $limit; ?></h4>
+            <h4 class="tp-cat-group-title">
+              <?php echo $cat . ' - ' . $prod_count . '/' . $limit; ?>
+              <?php echo renderOverageWarning($prod_count, $limit); ?>
+            </h4>
             <ol>
               <?php foreach($products as $product):?>
                 <li><?php echo $product->get_name(); ?> <a href="<?php echo admin_url( 'post.php?post=' . absint( $product->order_id ) . '&action=edit' ); ?>" target="_blank">View order</a></li>
@@ -169,7 +175,6 @@
       $moStart = strtotime("first day of this month");
       $moEnd = strtotime("last day of this month");
     }
-    // page template
     ?>
       <div class="wrap tp-membership-overages">
         <h1 class="tp-membership-overages-page-title">
@@ -178,6 +183,7 @@
         </h1>
         <?php
           $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd);
+
           foreach($RUNNING_TOTAL as $member):
             renderMemberTemplate($member);
           endforeach;
