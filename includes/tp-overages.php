@@ -5,21 +5,33 @@
     echo '</pre>';
   }
 
-  function determineBGColor($membership) {
-    $membership = strtolower($membership);
+  function determineBGColor($membership_name) {
+    $membership_name = strtolower($membership_name);
     $bgClass = '';
-    if (strpos($membership, 'gold') !== false) {
+    if (strpos($membership_name, 'gold') !== false) {
       $bgClass = 'gold';
-    } else if (strpos($membership, 'silver') !== false) {
+    } else if (strpos($membership_name, 'silver') !== false) {
       $bgClass = 'silver';
-    } else if (strpos($membership, 'bronze') !== false) {
+    } else if (strpos($membership_name, 'bronze') !== false) {
       $bgClass = 'bronze';
     }
     return $bgClass;
   }
 
-  function calculate_overages($member_orders) {
+  function calculate_overages() {
 
+  }
+
+  function get_membership_cat_limit($cat, $memberships) {
+    foreach($memberships as $membership):
+      $membership_name = $membership->plan->name;
+      $plan_rules = $_SESSION['thinkpawsitive_memberships_max_rules'][$membership_name];
+      if ( isset($plan_rules[$cat]) ):
+        return $plan_rules[$cat]['limit'];
+      else:
+        continue;
+      endif;
+    endforeach;
   }
 
   function renderMemberTemplate($member) {
@@ -29,26 +41,51 @@
     $products_by_cat = $member['products_by_cat'];
     ?>
       <div class="tp-member-card">
-        <h3 class="tp-member-name"><?php echo $name; ?></h3>
+        <h3 class="tp-member-name"><?php echo $name; ?> - </h3>
         <?php foreach($memberships as $membership): ?>
           <span class="tp-membership-label <?php echo determineBGColor($membership->plan->name); ?>"><?php echo $membership->plan->name; ?></span>
         <?php endforeach; ?>
         <p><a href="mailto: <?php echo $email; ?>"><?php echo $email; ?></a></p>
         <hr/>
-        <?php foreach($products_by_cat as $cat => $products): ?>
-          <h4><?php echo $cat; ?></h4>
-          <ol>
-            <?php foreach($products as $product): ?>
-              <li><a href="<?php echo $product->get_permalink(); ?>" target="_blank"><?php echo $product->get_name(); ?></a></li>
-            <?php endforeach; ?>
-          </ol>
+        <?php foreach($products_by_cat as $cat => $products):
+          $prod_count = count($products);
+          $limit = get_membership_cat_limit($cat, $memberships);
+          ?>
+          <div class="tp-cat-group">
+            <h4><?php echo $cat . ' - ' . $prod_count . '/' . $limit; ?></h4>
+            <ol>
+              <?php foreach($products as $product):?>
+                <li><?php echo $product->get_name(); ?> <a href="<?php echo admin_url( 'post.php?post=' . absint( $product->order_id ) . '&action=edit' ); ?>" target="_blank">View order</a></li>
+              <?php endforeach; ?>
+            </ol>
+          </div>
         <?php endforeach; ?>
       </div>
     <?php
   }
 
-  function tp_get_members_prev_mo() {
-    $RUNNING_TOTAL = array();
+  function tp_get_bookings($start, $end) {
+    $bookingsQuery = new WP_Query(array(
+      'post_type' => 'wc_booking',
+      'posts_per_page' => -1,
+      'date_query' => array(
+        'after' => date("Y-n-j", $start),
+        'before' => date("Y-n-j", $end)
+      ),
+    ));
+    if ( $bookingsQuery->have_posts() ) :
+    	while ( $bookingsQuery->have_posts() ) : $bookingsQuery->the_post();
+    		// nice_var_dump(get_the_title());
+        $wcBooking = new WC_Booking( get_the_id() );
+        $current_timestamp = $wcBooking->get_start_date();
+        nice_var_dump($current_timestamp);
+        // nice_var_dump( $wcBooking->get_product() );
+    	endwhile;
+    	wp_reset_postdata();
+    else :
+    	echo 'No bookables found.';
+    endif;
+
     // loop over past month's orders
     $order_statuses = array('wc-on-hold', 'wc-processing', 'wc-completed');
     $past_orders = wc_get_orders(array(
@@ -60,6 +97,10 @@
       'post_status' => $order_statuses,
       'numberposts' => -1,
     ));
+
+    // data store
+    $RUNNING_TOTAL = array();
+
     foreach ($past_orders as $order):
       $user = $order->get_user();
       $user_id = $user->ID;
@@ -89,6 +130,9 @@
           foreach($_SESSION['category_ids'] as $cat_name => $cat_id):
             $matches = array_intersect($cat_id, $product_cats);
             if ($matches) {
+              // add order date to each product for later use
+              $product->order_id = $order->get_id();
+              // add to our member
               if (!isset($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name])) {
                 $RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name] = array($product);
               } else {
@@ -103,10 +147,35 @@
   }
 
   function tp_membership_overages_page_template() {
-    $RUNNING_TOTAL = tp_get_members_prev_mo();
+    // parse the date for bookings query
+    if (isset($_GET['date'])) {
+      $moStart = strtotime("first day of" . $_GET['date']);
+      $moEnd = strtotime("last day of" . $_GET['date']);
+    } else {
+      $moStart = strtotime("first day of this month");
+      $moEnd = strtotime("last day of this month");
+    }
+    // nav link dates
+    $navDate = new DateTime( date("Y-m", $moStart) );
+    $navDate->modify( '-1 month' );
+    $prev = $navDate->format( 'Y-m' );
+    $navDate->modify( '+2 month' );
+    $next = $navDate->format( 'Y-m' );
+
+    // get bookings in date range
+    $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd);
+
+    // page template
     ?>
       <div class="wrap tp-membership-overages">
-        <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
+        <h1>
+          <?php echo esc_html( get_admin_page_title() ) ?>
+          <small>
+            <a class="date-nav-link" href="<?php echo admin_url('admin.php?page=tp_membership_overages&date=' . $prev); ?>"><<</a>
+            <?php echo date("F Y", $moStart); ?>
+            <a class="date-nav-link" href="<?php echo admin_url('admin.php?page=tp_membership_overages&date=' . $next); ?>">>></a>
+          </small>
+        </h1>
         <?php
           foreach($RUNNING_TOTAL as $member):
             renderMemberTemplate($member);

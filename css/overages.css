@@ -5,7 +5,13 @@
 }
 
 .tp-membership-overages h1 {
+  display: flex;
+  justify-content: space-between;
   margin-bottom: 25px;
+}
+
+.date-nav-link {
+  text-decoration: none;
 }
 
 .tp-member-card {
@@ -23,7 +29,8 @@
   background: #ddd;
   border-radius: 4px;
   font-size: .8rem;
-  padding: 2px;
+  font-weight: bold;
+  padding: 2px 4px;
 }
 
 .gold {
@@ -35,5 +42,12 @@
 }
 
 .bronze {
+  color: white;
   background: var(--bronze);
+}
+
+.tp-cat-group {
+  background: #fafafa;
+  max-width: 340px;
+  padding: 6px;
 }
