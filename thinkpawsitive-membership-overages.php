@@ -1,9 +1,9 @@
 <?php
 /*
-  Plugin Name: Thinkpawsitive Membership Freebies
+  Plugin Name: Thinkpawsitive Membership Overages
   Plugin URI:  https://icshelpsyou.com
-  Description: Displays membership overages from previous month.
-  Version:     2.0
+  Description: Membership overages reporting.
+  Version:     1.0
   Author:      ICS, LLC
   Author URI:  https://icshelpsyou.com
   License:     GPL2

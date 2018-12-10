@@ -13,7 +13,7 @@ function tp_admin_init() {
 	if ( !is_plugin_active( 'woocommerce/woocommerce.php' ) ) {
 	  add_action('admin_notices', function() { ?>
 			<div class="update-nag notice">
-			  <p><?php _e( 'Please install and activate the <a href="https://woocommerce.org" title="WooCommerce" target="_blank">WooCommerce plugin</a>. It is required for the <strong>ThinkPawsitive Overages</strong> plugin!', 'tp-membership-overages' ); ?></p>
+			  <p><?php _e( 'Please install and activate the <a href="https://woocommerce.org" title="WooCommerce" target="_blank">WooCommerce plugin</a>. It is required for the <strong>ThinkPawsitive Overages</strong> plugin!', 'thinkpawsitive-membership-overages' ); ?></p>
 			</div>
 		<?php } );
 
@@ -23,7 +23,7 @@ function tp_admin_init() {
   if ( !is_plugin_active( 'woocommerce-bookings/woocommerce-bookings.php' ) ) {
 	  add_action('admin_notices', function() { ?>
 			<div class="update-nag notice">
-			  <p><?php _e( 'Please install and activate the <a href="https://docs.woocommerce.com/documentation/plugins/woocommerce/woocommerce-extensions/woocommerce-bookings" title="WooCommerce Bookings" target="_blank">WooCommerce Bookings</a>. It is required for the <strong>ThinkPawsitive Overages</strong> plugin!', 'tp-membership-overages' ); ?></p>
+			  <p><?php _e( 'Please install and activate the <a href="https://docs.woocommerce.com/documentation/plugins/woocommerce/woocommerce-extensions/woocommerce-bookings" title="WooCommerce Bookings" target="_blank">WooCommerce Bookings</a>. It is required for the <strong>ThinkPawsitive Overages</strong> plugin!', 'thinkpawsitive-membership-overages' ); ?></p>
 			</div>
 		<?php } );
 
@@ -33,7 +33,7 @@ function tp_admin_init() {
   if ( !is_plugin_active( 'woocommerce-memberships/woocommerce-memberships.php' ) ) {
 	  add_action('admin_notices', function() { ?>
 			<div class="update-nag notice">
-			  <p><?php _e( 'Please install and activate the <a href="https://docs.woocommerce.com/document/woocommerce-memberships" title="WooCommerce Memberships" target="_blank">WooCommerce Memberships</a>. It is required for the <strong>ThinkPawsitive Overages</strong> plugin!', 'tp-membership-overages' ); ?></p>
+			  <p><?php _e( 'Please install and activate the <a href="https://docs.woocommerce.com/document/woocommerce-memberships" title="WooCommerce Memberships" target="_blank">WooCommerce Memberships</a>. It is required for the <strong>ThinkPawsitive Overages</strong> plugin!', 'thinkpawsitive-membership-overages' ); ?></p>
 			</div>
 		<?php } );
 
