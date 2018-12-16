@@ -1,8 +1,24 @@
 <?php
-  function nice_var_dump($val) {
-    echo '<pre>';
-    var_dump($val);
-    echo '</pre>';
+  // parse requested date
+  if (isset($_GET['date'])) {
+    $moStart = strtotime("first day of" . $_GET['date']);
+    $moEnd = strtotime("last day of" . $_GET['date']);
+  } else {
+    $moStart = strtotime("first day of this month");
+    $moEnd = strtotime("last day of this month");
+  }
+
+  // determine first month of current business quarter
+  $month = new DateTime( date("Y-m", $moStart) );
+  $month = $month->format('m');
+  if (1 <= $month && $month <= 3) {
+    $bizQuarterStartMonth = 1;
+  } else if (4 <= $month && $month <= 6) {
+    $bizQuarterStartMonth = 4;
+  } else if (7 <= $month && $month <= 9) {
+    $bizQuarterStartMonth = 7;
+  } else if (10 <= $month && $month <= 12) {
+    $bizQuarterStartMonth = 10;
   }
 
   function determineMembershipBGColor($membership_name) {
@@ -85,7 +101,11 @@
                 <?php renderOverageWarning($cat, $prod_count, $limit); ?>
                 <ol>
                   <?php foreach($products as $product):?>
-                    <li><?php echo $product->get_name(); ?> <a href="<?php echo admin_url( 'post.php?post=' . absint( $product->order_id ) . '&action=edit' ); ?>" target="_blank">View order</a></li>
+                    <li>
+                      <?php echo $product->get_name(); ?>
+                      <?php echo 'Booking: '; ?>
+                      <small>(<a href="<?php echo admin_url( 'post.php?post=' . absint( $product->order_id ) . '&action=edit' ); ?>" target="_blank">Order #<?php echo $product->order_id; ?></a>)</small>
+                    </li>
                   <?php endforeach; ?>
                 </ol>
               </div>
@@ -95,58 +115,72 @@
     <?php
   }
 
-  function tp_get_bookings($start, $end) {
+  function tp_get_bookings($start, $end, $bizQuarterStartMonth) {
     $RUNNING_TOTAL = array();
+    // format the start date for later use
+    $start = new DateTime( date("Y-m", $start) );
+    $start = $start->format('m');
+    // get bookings from beginning of current biz quarter to date
     $WCBookings = new WP_Query(array(
       'post_type' => 'wc_booking',
       'post_status' => array('complete', 'paid', 'processing'),
       'posts_per_page' => -1,
       'date_query' => array(
-        'after' => date("Y-n-j", $start),
+        'after' => date("Y-n-j", $bizQuarterStartMonth),
         'before' => date("Y-n-j", $end),
         'inclusive' => true,
       ),
     ));
+    // get down to it
     if ( $WCBookings->have_posts() ) :
     	while ( $WCBookings->have_posts() ) : $WCBookings->the_post();
         $booking = new WC_Booking( get_the_id() );
-        // nice_var_dump($booking);
-        // $current_timestamp = $booking->get_start_date();
-        // nice_var_dump($current_timestamp);
-        // nice_var_dump( $booking->get_product() );
-        // nice_var_dump( $booking->get_customer() );
-        // nice_var_dump( $booking->get_order() );
+
+        // get booking month
+        // $current_timestamp = strtotime( $booking->get_start_date() );
+        // $bookingMonth = new DateTime( date("Y-m", $current_timestamp) );
+        // $bookingMonth = $bookingMonth->format('m');
+
+        // if booking date is in current month
+        // if ($start === $bookingMonth) {
+
+        // } else {
+          // if is private lesson
+            // add it
+          // else
+            // skip the darn thing
+        // }
+
         $user_id = $booking->get_customer()->user_id;
         $memberships = wc_memberships_get_user_active_memberships( $user_id );
         if (empty($memberships)) {
           continue;
         } else {
-        // add user to $RUNNING_TOTAL if doesn't exist
-        if ( !isset( $RUNNING_TOTAL[$user_id] ) ):
-          $RUNNING_TOTAL[$user_id] = array(
-            'id' => $booking->get_customer()->user_id,
-            'name' => $booking->get_customer()->name,
-            'email' => $booking->get_customer()->email,
-            'memberships' => $memberships,
-            'products_by_cat' => array(),
-          );
-        endif;
-        // check if product category ids are in membership rules
-        $product = $booking->get_product();
-        $product_cats = $product->get_category_ids();
-        $order_id = $booking->get_order()->get_id();
-        foreach($_SESSION['category_ids'] as $cat_name => $cat_id):
-          $matches = array_intersect($cat_id, $product_cats);
-          if ($matches) {
-            // add order date to each product for later use
-            $product->order_id = $order_id;
-            // add to our member
-            if (!isset($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name])) {
-              $RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name] = array($product);
-            } else {
-              array_push($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name], $product);
+          // add user to $RUNNING_TOTAL if doesn't exist
+          if ( !isset( $RUNNING_TOTAL[$user_id] ) ):
+            $RUNNING_TOTAL[$user_id] = array(
+              'id' => $booking->get_customer()->user_id,
+              'name' => $booking->get_customer()->name,
+              'email' => $booking->get_customer()->email,
+              'memberships' => $memberships,
+              'products_by_cat' => array());
+          endif;
+          // check if product category ids are in membership rules
+          $product = $booking->get_product();
+          $product_cats = $product->get_category_ids();
+          $order_id = $booking->get_order()->get_id();
+          foreach($_SESSION['category_ids'] as $cat_name => $cat_id):
+            $matches = array_intersect($cat_id, $product_cats);
+            if ($matches) {
+              // add order date to each product for later use
+              $product->order_id = $order_id;
+              // add to our member
+              if (!isset($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name])) {
+                $RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name] = array($product);
+              } else {
+                array_push($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name], $product);
+              }
             }
-          }
         endforeach;
       }
     	endwhile;
@@ -159,14 +193,9 @@
   }
 
   function tp_membership_overages_page_template() {
-    // parse the date
-    if (isset($_GET['date'])) {
-      $moStart = strtotime("first day of" . $_GET['date']);
-      $moEnd = strtotime("last day of" . $_GET['date']);
-    } else {
-      $moStart = strtotime("first day of this month");
-      $moEnd = strtotime("last day of this month");
-    }
+    global $moStart;
+    global $moEnd;
+    global $bizQuarterStartMonth;
     ?>
       <div class="wrap tp-membership-overages">
         <h1 class="tp-membership-overages-page-title">
@@ -174,7 +203,7 @@
           <small><?php renderDateNavLinks( $moStart ); ?></small>
         </h1>
         <?php
-          $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd);
+          $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd, $bizQuarterStartMonth);
           if ($RUNNING_TOTAL):
             foreach($RUNNING_TOTAL as $member):
               renderMemberTemplate($member);
