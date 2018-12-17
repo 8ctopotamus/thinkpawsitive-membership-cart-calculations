@@ -9,8 +9,9 @@
   }
 
   // determine first month of current business quarter
-  $month = new DateTime( date("Y-m", $moStart) );
-  $month = $month->format('m');
+  $biz = new DateTime( date("Y-m", $moStart) );
+  $month = $biz->format('m');
+  $year = $biz->format('Y');
   if (1 <= $month && $month <= 3) {
     $bizQuarterStartMonth = 1;
   } else if (4 <= $month && $month <= 6) {
@@ -20,6 +21,8 @@
   } else if (10 <= $month && $month <= 12) {
     $bizQuarterStartMonth = 10;
   }
+
+  $bizQuarterStart = $year . '-' . $bizQuarterStartMonth . '-01';
 
   function determineMembershipBGColor($membership_name) {
     $membership_name = strtolower($membership_name);
@@ -115,7 +118,7 @@
     <?php
   }
 
-  function tp_get_bookings($start, $end, $bizQuarterStartMonth) {
+  function tp_get_bookings($start, $end, $bizQuarterStart) {
     $RUNNING_TOTAL = array();
     // format the start date for later use
     $start = new DateTime( date("Y-m", $start) );
@@ -126,31 +129,14 @@
       'post_status' => array('complete', 'paid', 'processing'),
       'posts_per_page' => -1,
       'date_query' => array(
-        'after' => date("Y-n-j", $bizQuarterStartMonth),
+        'after' => $bizQuarterStart,
         'before' => date("Y-n-j", $end),
         'inclusive' => true,
       ),
     ));
-    // get down to it
     if ( $WCBookings->have_posts() ) :
     	while ( $WCBookings->have_posts() ) : $WCBookings->the_post();
         $booking = new WC_Booking( get_the_id() );
-
-        // get booking month
-        // $current_timestamp = strtotime( $booking->get_start_date() );
-        // $bookingMonth = new DateTime( date("Y-m", $current_timestamp) );
-        // $bookingMonth = $bookingMonth->format('m');
-
-        // if booking date is in current month
-        // if ($start === $bookingMonth) {
-
-        // } else {
-          // if is private lesson
-            // add it
-          // else
-            // skip the darn thing
-        // }
-
         $user_id = $booking->get_customer()->user_id;
         $memberships = wc_memberships_get_user_active_memberships( $user_id );
         if (empty($memberships)) {
@@ -165,15 +151,24 @@
               'memberships' => $memberships,
               'products_by_cat' => array());
           endif;
+          // get booking month
+          $bookingMonth = strtotime( $booking->get_start_date() );
+          $bookingMonth = new DateTime( date("Y-m", $bookingMonth) );
+          $bookingMonth = $bookingMonth->format('m');
           // check if product category ids are in membership rules
           $product = $booking->get_product();
           $product_cats = $product->get_category_ids();
           $order_id = $booking->get_order()->get_id();
           foreach($_SESSION['category_ids'] as $cat_name => $cat_id):
-            $matches = array_intersect($cat_id, $product_cats);
+            $matches = !empty(array_intersect($cat_id, $product_cats));
+            $isPrivateLesson = !empty(array_intersect($_SESSION['category_ids']['Private Lessons'], $product_cats));
             if ($matches) {
               // add order date to each product for later use
               $product->order_id = $order_id;
+              // if booking date is not in current month and is a Private Lesson
+              if ($start !== $bookingMonth && !$isPrivateLesson) {
+                continue;
+              }
               // add to our member
               if (!isset($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name])) {
                 $RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name] = array($product);
@@ -181,8 +176,8 @@
                 array_push($RUNNING_TOTAL[$user_id]['products_by_cat'][$cat_name], $product);
               }
             }
-        endforeach;
-      }
+          endforeach;
+        }
     	endwhile;
     	wp_reset_postdata();
       return $RUNNING_TOTAL;
@@ -195,7 +190,7 @@
   function tp_membership_overages_page_template() {
     global $moStart;
     global $moEnd;
-    global $bizQuarterStartMonth;
+    global $bizQuarterStart;
     ?>
       <div class="wrap tp-membership-overages">
         <h1 class="tp-membership-overages-page-title">
@@ -203,7 +198,7 @@
           <small><?php renderDateNavLinks( $moStart ); ?></small>
         </h1>
         <?php
-          $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd, $bizQuarterStartMonth);
+          $RUNNING_TOTAL = tp_get_bookings($moStart, $moEnd, $bizQuarterStart);
           if ($RUNNING_TOTAL):
             foreach($RUNNING_TOTAL as $member):
               renderMemberTemplate($member);
