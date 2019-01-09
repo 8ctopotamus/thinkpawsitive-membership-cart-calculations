@@ -1,29 +1,4 @@
 <?php
-  // parse requested date
-  if (isset($_GET['date'])) {
-    $moStart = strtotime("first day of" . $_GET['date']);
-    $moEnd = strtotime("last day of" . $_GET['date']);
-  } else {
-    $moStart = strtotime("first day of this month");
-    $moEnd = strtotime("last day of this month");
-  }
-
-  // determine first month of current business quarter
-  $biz = new DateTime( date("Y-m", $moStart) );
-  $month = $biz->format('m');
-  $year = $biz->format('Y');
-  if (1 <= $month && $month <= 3) {
-    $bizQuarterStartMonth = 1;
-  } else if (4 <= $month && $month <= 6) {
-    $bizQuarterStartMonth = 4;
-  } else if (7 <= $month && $month <= 9) {
-    $bizQuarterStartMonth = 7;
-  } else if (10 <= $month && $month <= 12) {
-    $bizQuarterStartMonth = 10;
-  }
-
-  $bizQuarterStart = $year . '-' . $bizQuarterStartMonth . '-01';
-
   function determineMembershipBGColor($membership_name) {
     $membership_name = strtolower($membership_name);
     $bgClass = '';
@@ -47,7 +22,7 @@
         </span>
         <?php
           if ($isOverLimit): ?>
-            <div class="tp-overage-alert"><span class="dashicons dashicons-warning"></span>OVERAGE!</div>
+            <div class="tp-overage-alert"><span class="dashicons dashicons-warning"></span> OVERAGE!</div>
             <?php
           endif;
         ?>
@@ -165,7 +140,7 @@
             if ($matches) {
               // add order date to each product for later use
               $product->order_id = $order_id;
-              // if booking date is not in current month and is a Private Lesson
+              // if booking date is not in current month (which means it is in current biz quarter) and is a Private Lesson
               if ($start !== $bookingMonth && !$isPrivateLesson) {
                 continue;
               }
@@ -188,9 +163,31 @@
   }
 
   function tp_membership_overages_page_template() {
-    global $moStart;
-    global $moEnd;
-    global $bizQuarterStart;
+    // parse requested date
+    if (isset($_GET['date'])) {
+      $moStart = strtotime("first day of" . $_GET['date']);
+      $moEnd = strtotime("last day of" . $_GET['date']);
+    } else {
+      $moStart = strtotime("first day of this month");
+      $moEnd = strtotime("last day of this month");
+    }
+
+    // determine first month of current business quarter
+    $biz = new DateTime( date("Y-m", $moStart) );
+    $month = $biz->format('m');
+    $year = $biz->format('Y');
+    if (1 <= $month && $month <= 3) {
+      $bizQuarterStartMonth = 1;
+    } else if (4 <= $month && $month <= 6) {
+      $bizQuarterStartMonth = 4;
+    } else if (7 <= $month && $month <= 9) {
+      $bizQuarterStartMonth = 7;
+    } else if (10 <= $month && $month <= 12) {
+      $bizQuarterStartMonth = 10;
+    }
+
+    $bizQuarterStart = $year . '-' . $bizQuarterStartMonth . '-01';
+    
     ?>
       <div class="wrap tp-membership-overages">
         <h1 class="tp-membership-overages-page-title">
