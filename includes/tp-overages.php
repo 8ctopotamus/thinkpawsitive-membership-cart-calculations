@@ -124,7 +124,8 @@
               'name' => $booking->get_customer()->name,
               'email' => $booking->get_customer()->email,
               'memberships' => $memberships,
-              'products_by_cat' => array());
+              'products_by_cat' => array()
+            );
           endif;
           // get booking month
           $bookingMonth = strtotime( $booking->get_start_date() );
@@ -133,7 +134,8 @@
           // check if product category ids are in membership rules
           $product = $booking->get_product();
           $product_cats = $product->get_category_ids();
-          $order_id = $booking->get_order()->get_id();
+          $order_id = $booking->get_order_id();
+
           foreach($_SESSION['category_ids'] as $cat_name => $cat_id):
             $matches = !empty(array_intersect($cat_id, $product_cats));
             $isPrivateLesson = !empty(array_intersect($_SESSION['category_ids']['Private Lessons'], $product_cats));
@@ -187,7 +189,7 @@
     }
 
     $bizQuarterStart = $year . '-' . $bizQuarterStartMonth . '-01';
-    
+
     ?>
       <div class="wrap tp-membership-overages">
         <h1 class="tp-membership-overages-page-title">
